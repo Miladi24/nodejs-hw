@@ -1,56 +1,43 @@
+// src/server.js
+
 import 'dotenv/config';
 import express from 'express';
-import pino from 'pino-http';
 import cors from 'cors';
-import helmet from 'helmet';
 
-import connectMongoDB from './db/connectMongoDB.js';
+import  connectMongoDB from './db/connectMongoDB.js';
+import { logger } from './middleware/logger.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import notesRoutes from './routes/notesRoutes.js';
 
 const app = express();
-
-app.use(express.json());
-app.use(cors());
-app.use(helmet());
-
-app.use(
-  pino({
-    level: 'info',
-    transport: {
-      target: 'pino-pretty',
-      options: {
-        colorize: true,
-        translateTime: 'HH:MM:ss',
-        ignore: 'pid,hostname',
-        messageFormat:
-          '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
-        hideObject: true,
-      },
-    },
-  })
-);
-
-app.use('/api/notes', notesRoutes);
-
-
-app.use(notFoundHandler);
-app.use(errorHandler);
-
 const PORT = process.env.PORT || 3000;
 
-const startServer = async () => {
-  try {
-    await connectMongoDB();
+// Middleware
+//pino-http для логування HTTP-запитів
+app.use(logger);
+// Middleware для парсингу JSON
+app.use(express.json());
+// Дозволяє запити з будь-яких джерел
+app.use(cors());
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Server start error:', error);
-    process.exit(1);
-  }
-};
+// Кореневий маршрут
+app.get('/', (req, res) => {
+  res.status(200).json({ message: 'Hello, World!' });
+});
 
-startServer();
+app.use(notesRoutes);
+
+// Middleware 404 (після всіх маршрутів)
+app.use(notFoundHandler);
+
+// Middleware для обробки помилок (останнє)
+app.use(errorHandler);
+
+// підключення до MongoDB
+await connectMongoDB();
+
+// Запуск сервера
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
