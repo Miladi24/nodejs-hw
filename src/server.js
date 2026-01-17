@@ -1,18 +1,20 @@
+import 'dotenv/config';
 import express from 'express';
 import pino from 'pino-http';
 import cors from 'cors';
-import helmet from "helmet";
-import 'dotenv/config';
+import helmet from 'helmet';
+
 import connectMongoDB from './db/connectMongoDB.js';
 import { notFoundHandler } from './middleware/notFoundHandler.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import notesRoutes from "./routes/notesRoutes.js";
+import notesRoutes from './routes/notesRoutes.js';
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 app.use(helmet());
+
 app.use(
   pino({
     level: 'info',
@@ -22,23 +24,32 @@ app.use(
         colorize: true,
         translateTime: 'HH:MM:ss',
         ignore: 'pid,hostname',
-        messageFormat: '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
+        messageFormat:
+          '{req.method} {req.url} {res.statusCode} - {responseTime}ms',
         hideObject: true,
       },
     },
-  }),
+  })
 );
-
-const PORT = process.env.PORT ?? 3000;
 
 app.use(notesRoutes);
 
 app.use(notFoundHandler);
-
 app.use(errorHandler);
 
-await connectMongoDB();
+const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+const startServer = async () => {
+  try {
+    await connectMongoDB();
+
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Server start error:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
