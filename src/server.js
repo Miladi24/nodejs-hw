@@ -32,7 +32,8 @@ app.use(
   })
 );
 
-app.use(notesRoutes);
+app.use('/api/notes', notesRoutes);
+
 
 app.use(notFoundHandler);
 app.use(errorHandler);
