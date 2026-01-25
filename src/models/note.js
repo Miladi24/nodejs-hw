@@ -1,25 +1,29 @@
-import mongoose from "mongoose";
-import { TAGS } from "../constants/tags.js";
+import { Schema, model } from 'mongoose';
+import { TAGS } from '../constants/tags.js';
 
-const noteSchema = mongoose.Schema(
+const noteSchema = new Schema(
   {
     title: {
       type: String,
+      required: true,
       trim: true,
-      required: true
     },
     content: {
       type: String,
+      required: false,
+      default: '',
       trim: true,
-      default: ""
     },
     tag: {
       type: String,
+      required: false,
       enum: TAGS,
-      default: "Todo"
+      default: 'Todo',
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
-export const Note = mongoose.model("Note", noteSchema);
+noteSchema.index({ title: 'text', content: 'text' });
+
+export const Note = model('Note', noteSchema);
