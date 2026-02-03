@@ -10,15 +10,18 @@ const noteSchema = new Schema(
     },
     content: {
       type: String,
-      required: false,
       default: '',
       trim: true,
     },
     tag: {
       type: String,
-      required: false,
       enum: TAGS,
       default: 'Todo',
+    },
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
   },
   { timestamps: true },
